@@ -3,6 +3,8 @@
 Demo comercial (solo front, sin backend) de la intranet cotizada a Multiparque.
 Corresponde al alcance de la cotización del 24 de julio de 2026.
 
+**Demo en vivo: <https://wearedatalab.github.io/multiparque-intranet/>**
+
 ## Cómo verlo
 
 ```bash
