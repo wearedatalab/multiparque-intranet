@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administración · Intranet Multiparque</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<main class="page">
+  <div class="container">
+    <div class="pagehead rise">
+      <div class="pagehead__title">
+        <img class="pagehead__icon" src="assets/img/icon-admin.jpg" alt="">
+        <div>
+          <h1>Administración de la plataforma</h1>
+          <svg class="smile" viewBox="0 0 88 14"><path d="M4 3c14 9 66 9 80 0"/></svg>
+        </div>
+      </div>
+      <p>Usuarios ilimitados, personalización sin desarrolladores y consumo de infraestructura visible en tiempo real.</p>
+    </div>
+
+    <div class="tabs rise rise-1">
+      <button id="t-usuarios" class="is-active" onclick="setTab('usuarios')">👥 Usuarios y roles</button>
+      <button id="t-infra" onclick="setTab('infra')">📊 Infraestructura</button>
+      <button id="t-marca" onclick="setTab('marca')">🎨 Personalización</button>
+    </div>
+
+    <!-- ==================== USUARIOS ==================== -->
+    <section id="p-usuarios" class="rise rise-2">
+      <div class="card" style="overflow-x:auto">
+        <div class="widget__head">
+          <h3>Colaboradores registrados</h3>
+          <button class="btn btn--navy btn--sm" onclick="MP.toast('Importación desde Excel/CSV disponible en la versión completa')">⬆ Importar desde Excel</button>
+        </div>
+        <table class="table" style="min-width:640px">
+          <thead><tr><th>Colaborador</th><th>Área / Zona</th><th>Rol en la plataforma</th><th>Acciones</th></tr></thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-top:18px;background:rgba(0,174,239,.06);border:1.5px dashed var(--cyan);box-shadow:none">
+        <strong style="font-family:var(--font-display);color:var(--navy)">👁️ Función «ingresar como»</strong>
+        <p class="small muted" style="margin-top:4px">Entra a la plataforma viendo exactamente lo que ve cualquier colaborador, para supervisar y dar soporte en tiempo real. Pulsa «Ingresar como» en la tabla para probarlo.</p>
+      </div>
+    </section>
+
+    <!-- ==================== INFRAESTRUCTURA ==================== -->
+    <section id="p-infra" class="hidden rise">
+      <div class="card" style="margin-bottom:18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <span class="badge badge--soft" style="font-size:.8rem">Bloque Inicial · incluido en el fee mensual</span>
+        <span class="small muted">Infraestructura dedicada y exclusiva de Multiparque en AWS · datos aislados · copias de seguridad automáticas</span>
+      </div>
+      <div class="gauges" id="gauges"></div>
+      <div class="card" style="margin-top:18px">
+        <div class="widget__head"><h3>Escalamiento por bloques</h3><span class="badge badge--soft">Solo pagas lo que usas</span></div>
+        <p class="small muted" style="margin-bottom:14px">Si la operación crece, se activa el siguiente bloque con visibilidad y aprobación previa del parque. El costo nunca crece con el número de usuarios.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+          <div style="border:2px solid var(--lime);border-radius:16px;padding:16px;background:rgba(186,215,49,.08)">
+            <strong style="font-family:var(--font-display);color:var(--navy)">Bloque Inicial ✓</strong>
+            <p class="small muted">0.5 vCPU · 2 GB RAM · 30 GB<br><b style="color:var(--navy)">Activo</b> · incluido en el fee</p>
+          </div>
+          <div style="border:1.5px solid var(--line);border-radius:16px;padding:16px">
+            <strong style="font-family:var(--font-display);color:var(--muted)">Bloque Crecimiento</strong>
+            <p class="small muted">1 vCPU · 4 GB RAM · 80 GB<br>Se activa con aprobación previa</p>
+          </div>
+          <div style="border:1.5px solid var(--line);border-radius:16px;padding:16px">
+            <strong style="font-family:var(--font-display);color:var(--muted)">Bloque Temporada</strong>
+            <p class="small muted">2 vCPU · 8 GB RAM · 160 GB<br>Para picos de uso intensivo</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PERSONALIZACIÓN ==================== -->
+    <section id="p-marca" class="hidden rise">
+      <div class="dash" style="grid-template-columns:1fr 1fr">
+        <div class="card">
+          <div class="widget__head"><h3>Color de acento</h3><span class="badge badge--soft">Sin desarrolladores</span></div>
+          <p class="small muted" style="margin-bottom:16px">Cambia el color de los botones y acentos de toda la intranet. Pruébalo: el cambio es inmediato.</p>
+          <div class="swatches" id="swatches"></div>
+          <button class="btn btn--lime btn--sm" style="margin-top:18px" onclick="MP.toast('Vista previa aplicada · así de fácil sería en producción')">Probar en vivo</button>
+        </div>
+        <div class="dash__col">
+          <div class="card">
+            <div class="widget__head"><h3>Logo y textos</h3></div>
+            <div style="display:flex;gap:16px;align-items:center">
+              <img src="assets/logo.png" alt="Logo" style="width:74px;border-radius:18px;box-shadow:var(--shadow)">
+              <div>
+                <button class="btn btn--ghost btn--sm" onclick="MP.toast('Selector de archivo (demo)')">Cambiar logo</button>
+                <p class="small muted" style="margin-top:6px">PNG o SVG · se aplica a toda la plataforma y a los correos.</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="widget__head"><h3>Correo con dominio propio</h3></div>
+            <p class="small" style="background:var(--bg);border-radius:12px;padding:12px 16px;font-family:monospace">intranet@multiparque.co ✓</p>
+            <p class="small muted" style="margin-top:8px">Las notificaciones y recordatorios salen con el correo y la marca de Multiparque.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  MP.renderShell('admin');
+  const me = MP.me();
+
+  /* Guardia: solo administración y dirección */
+  if(!['admin','direccion'].includes(me.rol)){
+    location.href = 'dashboard.html';
+  }
+
+  function setTab(t){
+    ['usuarios','infra','marca'].forEach(x => {
+      document.getElementById('t-' + x).classList.toggle('is-active', x === t);
+      document.getElementById('p-' + x).classList.toggle('hidden', x !== t);
+    });
+  }
+  if(location.hash === '#infra') setTab('infra');
+
+  /* ---------- Usuarios ---------- */
+  document.getElementById('users-body').innerHTML = MP.USERS.map(u => {
+    const a = MP.AREAS[u.area];
+    return '<tr>' +
+      '<td><div style="display:flex;gap:10px;align-items:center">' + MP.avatarHtml(u,'avatar--sm') +
+        '<div><strong style="font-size:.9rem">' + u.nombre + '</strong><div class="small muted">' + u.correo + '</div></div></div></td>' +
+      '<td><span class="catbadge" style="background:' + a.color + ';color:' + a.txt + ';font-size:.6rem">' + u.area + '</span>' +
+        '<div class="small muted" style="margin-top:3px">' + u.zona + '</div></td>' +
+      '<td><select onchange="MP.toast(\'Rol actualizado (demo)\')" style="padding:7px 10px;border-radius:10px;border:1.5px solid var(--line);font-size:.82rem">' +
+        Object.entries(MP.ROL_NOMBRE).map(([k,v]) => '<option ' + (k === u.rol ? 'selected' : '') + '>' + v + '</option>').join('') + '</select></td>' +
+      '<td>' + (u.id !== me.id ?
+        '<button class="btn btn--ghost btn--sm" onclick="MP.impersonate(\'' + u.id + '\')">' + MP.icon('eye',14) + ' Ingresar como</button>' :
+        '<span class="badge badge--soft">Tú</span>') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  /* ---------- Gauges de infraestructura ---------- */
+  const RES = [
+    { nombre:'Procesador', uso: 22, det:'0.11 de 0.5 vCPU', color:'var(--cyan)' },
+    { nombre:'Memoria RAM', uso: 41, det:'0.82 de 2 GB', color:'var(--lime-dark)' },
+    { nombre:'Almacenamiento', uso: 28, det:'8.4 de 30 GB', color:'var(--orange)' }
+  ];
+  const C = 2 * Math.PI * 58;
+  document.getElementById('gauges').innerHTML = RES.map(r =>
+    '<div class="card gauge">' +
+      '<div class="gauge__ring" style="color:' + r.color + '">' +
+        '<svg width="130" height="130" viewBox="0 0 130 130">' +
+          '<circle class="bgc" cx="65" cy="65" r="58"/>' +
+          '<circle cx="65" cy="65" r="58" stroke="currentColor" stroke-dasharray="' + C + '" stroke-dashoffset="' + (C * (1 - r.uso/100)) + '"/>' +
+        '</svg>' +
+        '<span class="gauge__val">' + r.uso + '%</span>' +
+      '</div>' +
+      '<h4>' + r.nombre + '</h4><p>' + r.det + '</p>' +
+    '</div>').join('');
+
+  /* ---------- Swatches ---------- */
+  const colores = ['#BAD731','#00AEEF','#FFE905','#F46200','#AB214F','#740F75'];
+  let activo = '#BAD731';
+  function renderSw(){
+    document.getElementById('swatches').innerHTML = colores.map(c =>
+      '<button class="swatch' + (c === activo ? ' is-active' : '') + '" style="background:' + c + '" onclick="pick(\'' + c + '\')"></button>').join('');
+  }
+  function pick(c){
+    activo = c;
+    document.documentElement.style.setProperty('--lime', c);
+    renderSw();
+    MP.toast('Acento cambiado en toda la intranet');
+  }
+  renderSw();
+</script>
+</body>
+</html>

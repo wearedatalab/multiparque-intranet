@@ -1,0 +1,6 @@
+# Scripts de generación de imágenes: contienen la API key de fal.ai — nunca publicar
+assets/gen-*.sh
+assets/gen-*.log
+
+# Hojas de contacto y pruebas temporales
+assets/img/_*

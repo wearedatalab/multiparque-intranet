@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noticias · Intranet Multiparque</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<main class="page">
+  <div class="container">
+    <div class="pagehead rise">
+      <div class="pagehead__row">
+        <div class="pagehead__title">
+          <img class="pagehead__icon" src="assets/img/icon-noticias.jpg" alt="">
+          <div>
+            <h1>Noticias y comunicados</h1>
+            <svg class="smile" viewBox="0 0 88 14"><path d="M4 3c14 9 66 9 80 0"/></svg>
+          </div>
+        </div>
+        <button class="btn btn--lime" id="btn-nueva" onclick="nuevaNoticia()">+ Publicar noticia</button>
+      </div>
+      <p>El muro cronológico del parque: lo más reciente siempre de primero, con la historia navegable hacia atrás.</p>
+    </div>
+
+    <!-- Noticia destacada -->
+    <div id="featured-slot" class="rise rise-1"></div>
+
+    <div class="toolbar rise rise-2">
+      <div class="chips" id="cats"></div>
+    </div>
+
+    <div class="timeline rise rise-3" id="timeline"></div>
+  </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  MP.renderShell('noticias');
+  const me = MP.me();
+  let cat = 'Todas';
+
+  /* Botón de publicar solo para roles editores */
+  const puedePublicar = ['comunicaciones','direccion','talento','admin'].includes(me.rol);
+  if(!puedePublicar) document.getElementById('btn-nueva').style.display = 'none';
+
+  /* Destacada */
+  const dest = MP.NEWS.find(n => n.destacado);
+  if(dest){
+    document.getElementById('featured-slot').innerHTML =
+      '<div class="featured" onclick="MP.openNews(\'' + dest.id + '\')">' +
+        '<img src="' + dest.imagen + '" alt="">' +
+        '<div class="featured__body">' +
+          '<span class="blob" style="width:150px;height:150px;background:rgba(186,215,49,.14);top:-40px;right:-40px"></span>' +
+          '<div><span class="catbadge" style="background:var(--lime);color:var(--navy)">⭐ Destacada</span></div>' +
+          '<h2>' + dest.titulo + '</h2><p>' + dest.resumen + '</p>' +
+          '<div class="meta">' + dest.autor + ' · ' + MP.fmtFecha(dest.fecha) + '</div>' +
+        '</div></div>';
+  }
+
+  /* Chips de categoría */
+  const cats = ['Todas'].concat(Object.keys(MP.NEWS_CATS));
+  function renderCats(){
+    document.getElementById('cats').innerHTML = cats.map(c =>
+      '<button class="chip' + (cat === c ? ' is-active' : '') + '" onclick="setCat(\'' + c + '\')">' + c + '</button>').join('');
+  }
+  function setCat(c){ cat = c; renderCats(); renderTimeline(); }
+
+  /* Línea de tiempo agrupada por mes */
+  function renderTimeline(){
+    const items = MP.NEWS
+      .filter(n => n.id !== (dest && dest.id))
+      .filter(n => cat === 'Todas' || n.categoria === cat)
+      .sort((a,b) => b.fecha.localeCompare(a.fecha));
+
+    let html = '', mesActual = '';
+    items.forEach(n => {
+      const mes = MP.mesDe(n.fecha) + ' de ' + n.fecha.split('-')[0];
+      if(mes !== mesActual){
+        mesActual = mes;
+        html += '<div class="tl-month">' + mes + '</div>';
+      }
+      const c = MP.NEWS_CATS[n.categoria];
+      html += '<article class="newscard" onclick="MP.openNews(\'' + n.id + '\')">' +
+        (n.imagen ? '<img src="' + n.imagen + '" alt="">' : '<div class="newscard__noimg">📣</div>') +
+        '<div class="newscard__body">' +
+          '<span class="catbadge" style="background:' + c + (n.categoria === 'Seguridad' ? ';color:var(--navy)' : '') + '">' + n.categoria + '</span>' +
+          (n.fijado ? ' <span class="badge badge--soft">📌 Fijada en el inicio</span>' : '') +
+          '<h3>' + n.titulo + '</h3><p>' + n.resumen + '</p>' +
+          '<div class="newscard__meta"><span>' + n.autor + '</span><span>' + MP.fmtFecha(n.fecha) + '</span><span>💚 ' + n.likes + '</span></div>' +
+        '</div></article>';
+    });
+    document.getElementById('timeline').innerHTML = html ||
+      '<div class="card" style="text-align:center;padding:40px">Sin noticias en esta categoría.</div>';
+  }
+
+  renderCats();
+  renderTimeline();
+
+  /* Editor demo */
+  function nuevaNoticia(){
+    MP.openModal(
+      '<h2 style="font-size:1.35rem">Publicar noticia</h2>' +
+      '<p class="muted small" style="margin-bottom:18px">Como ' + MP.ROL_NOMBRE[me.rol] + ', puedes publicar directamente, sin depender de un desarrollador.</p>' +
+      '<div class="field"><label>Título</label><input type="text" placeholder="Ej: Nueva cafetería para colaboradores"></div>' +
+      '<div class="field"><label>Categoría</label><select style="width:100%;padding:12px 16px;border-radius:14px;border:1.5px solid var(--line)">' +
+        Object.keys(MP.NEWS_CATS).map(c => '<option>' + c + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label>Resumen</label><textarea rows="3" style="width:100%;padding:12px 16px;border-radius:14px;border:1.5px solid var(--line);resize:vertical" placeholder="¿Qué debe saber el equipo?"></textarea></div>' +
+      '<div style="border:2px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:16px">🖼️ Arrastra una imagen o un video aquí</div>' +
+      '<label style="display:flex;gap:10px;align-items:center;font-size:.88rem;margin-bottom:18px"><input type="checkbox"> 📌 Fijar como comunicado destacado en el panel de inicio</label>' +
+      '<button class="btn btn--lime" style="width:100%" onclick="MP.closeModal();MP.toast(\'Noticia publicada (demo)\')">Publicar ahora</button>'
+    );
+  }
+  if(location.hash === '#nueva' && puedePublicar) nuevaNoticia();
+
+  /* Abrir noticia desde el buscador global (?n=id) */
+  const params = new URLSearchParams(location.search);
+  if(params.get('n')) MP.openNews(params.get('n'));
+</script>
+</body>
+</html>

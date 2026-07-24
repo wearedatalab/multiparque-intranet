@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario · Intranet Multiparque</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<main class="page">
+  <div class="container">
+    <div class="pagehead rise">
+      <div class="pagehead__title">
+        <img class="pagehead__icon" src="assets/img/icon-calendario.jpg" alt="">
+        <div>
+          <h1>Calendario corporativo y de equipos</h1>
+          <svg class="smile" viewBox="0 0 88 14"><path d="M4 3c14 9 66 9 80 0"/></svg>
+        </div>
+      </div>
+      <p>Festivos, celebraciones y actividades de cada área en un solo lugar, con recordatorios por correo con la marca del parque.</p>
+    </div>
+
+    <div class="toolbar rise rise-1">
+      <div class="chips" id="filters"></div>
+    </div>
+
+    <div class="cal rise rise-2">
+      <!-- Mes -->
+      <section class="calgrid">
+        <div class="calgrid__head">
+          <h2 id="cal-title"></h2>
+          <div class="calgrid__nav">
+            <button onclick="mover(-1)" aria-label="Mes anterior">‹</button>
+            <button onclick="mover(1)" aria-label="Mes siguiente">›</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><th>Dom</th></tr></thead>
+          <tbody id="cal-body"></tbody>
+        </table>
+        <div class="callegend">
+          <span><i style="background:var(--navy)"></i> Corporativo</span>
+          <span id="legend-areas"></span>
+        </div>
+      </section>
+
+      <!-- Próximos -->
+      <section class="card widget">
+        <div class="widget__head"><h3><span class="dot" style="background:var(--yellow)"></span> Próximos eventos</h3></div>
+        <div id="upcoming"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  MP.renderShell('calendario');
+  const me = MP.me();
+
+  let anio = 2026, mes = 6; // julio 2026 (0-index)
+  let filtro = 'todos';     // todos | corporativo | miequipo
+
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  function renderFilters(){
+    const f = [
+      { id:'todos', label:'Todos' },
+      { id:'corporativo', label:'🏛️ Corporativo' },
+      { id:'miequipo', label:'👥 Mi equipo (' + me.area + ')' }
+    ];
+    document.getElementById('filters').innerHTML = f.map(x =>
+      '<button class="chip' + (filtro === x.id ? ' is-active' : '') + '" onclick="setFiltro(\'' + x.id + '\')">' + x.label + '</button>').join('');
+  }
+  function setFiltro(f){ filtro = f; renderFilters(); renderCal(); renderUpcoming(); }
+
+  function visibles(){
+    return MP.EVENTS.filter(e => {
+      if(filtro === 'corporativo') return e.tipo === 'corporativo';
+      if(filtro === 'miequipo') return e.tipo === 'corporativo' || e.area === me.area;
+      return true;
+    });
+  }
+
+  function renderCal(){
+    document.getElementById('cal-title').textContent = MESES[mes] + ' ' + anio;
+    const evs = visibles();
+    const primero = new Date(anio, mes, 1);
+    let inicio = (primero.getDay() + 6) % 7; // lunes = 0
+    const dias = new Date(anio, mes + 1, 0).getDate();
+    const diasPrev = new Date(anio, mes, 0).getDate();
+
+    let html = '<tr>', celda = 0;
+    for(let i = inicio - 1; i >= 0; i--){
+      html += '<td class="is-out"><span class="d">' + (diasPrev - i) + '</span></td>'; celda++;
+    }
+    for(let d = 1; d <= dias; d++){
+      const iso = anio + '-' + String(mes + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const hoy = iso === '2026-07-23';
+      const delDia = evs.filter(e => e.fecha === iso);
+      html += '<td class="' + (hoy ? 'is-today' : '') + '"><span class="d">' + d + '</span>' +
+        delDia.map(e => {
+          const a = e.area ? MP.AREAS[e.area] : null;
+          const bg = a ? a.color : 'var(--navy)';
+          const tx = a ? a.txt : '#fff';
+          return '<button class="calev" style="background:' + bg + ';color:' + tx + '" onclick="MP.openEvent(\'' + e.id + '\')" title="' + MP.esc(e.titulo) + '">' + MP.esc(e.titulo) + '</button>';
+        }).join('') + '</td>';
+      celda++;
+      if(celda % 7 === 0) html += '</tr><tr>';
+    }
+    let sig = 1;
+    while(celda % 7 !== 0){ html += '<td class="is-out"><span class="d">' + (sig++) + '</span></td>'; celda++; }
+    html += '</tr>';
+    document.getElementById('cal-body').innerHTML = html;
+
+    /* Leyenda de áreas presentes en el mes */
+    const areasMes = [...new Set(evs.filter(e => e.area && e.fecha.startsWith(anio + '-' + String(mes+1).padStart(2,'0'))).map(e => e.area))];
+    document.getElementById('legend-areas').innerHTML = areasMes.map(a =>
+      '<span style="margin-right:12px"><i style="background:' + MP.AREAS[a].color + '"></i> ' + a + '</span>').join('');
+  }
+
+  function mover(d){
+    mes += d;
+    if(mes < 0){ mes = 11; anio--; }
+    if(mes > 11){ mes = 0; anio++; }
+    renderCal();
+  }
+
+  function renderUpcoming(){
+    const evs = visibles().filter(e => e.fecha >= '2026-07-23').slice(0,7);
+    document.getElementById('upcoming').innerHTML = evs.map(e => {
+      const a = e.area ? MP.AREAS[e.area] : null;
+      return '<div class="eventrow" style="cursor:pointer" onclick="MP.openEvent(\'' + e.id + '\')">' +
+        '<div class="datebox"><b>' + MP.diaNum(e.fecha) + '</b><span>' + MP.mesAbrev(e.fecha) + '</span></div>' +
+        '<div class="eventrow__info" style="flex:1"><strong>' + e.titulo + '</strong>' +
+        '<span class="small muted">' + e.hora + ' · ' + e.lugar + '</span></div>' +
+        '<span class="catbadge" style="background:' + (a ? a.color : 'var(--navy)') + ';color:' + (a ? a.txt : '#fff') + ';font-size:.58rem">' + (a ? e.area.split(' ')[0] : 'Corp.') + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  renderFilters();
+  renderCal();
+  renderUpcoming();
+
+  /* Abrir evento desde el buscador global (?e=id) */
+  const params = new URLSearchParams(location.search);
+  if(params.get('e')) MP.openEvent(params.get('e'));
+</script>
+</body>
+</html>

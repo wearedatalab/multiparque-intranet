@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Directorio · Intranet Multiparque</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<main class="page">
+  <div class="container">
+    <div class="pagehead rise">
+      <div class="pagehead__title">
+        <img class="pagehead__icon" src="assets/img/icon-directorio.jpg" alt="">
+        <div>
+          <h1>Directorio de empleados</h1>
+          <svg class="smile" viewBox="0 0 88 14"><path d="M4 3c14 9 66 9 80 0"/></svg>
+        </div>
+      </div>
+      <p>Encuentra en segundos quién sabe de qué y cómo contactarlo. Busca por nombre, cargo, área o habilidad.</p>
+    </div>
+
+    <div class="toolbar rise rise-1">
+      <div class="searchbox">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.4-4.4"/></svg>
+        <input id="q" type="text" placeholder="Ej: primeros auxilios, karts, Daniela…" oninput="render()">
+      </div>
+      <select id="f-area" class="chip" style="padding:10px 16px" onchange="render()">
+        <option value="">Todas las áreas</option>
+      </select>
+      <select id="f-zona" class="chip" style="padding:10px 16px" onchange="render()">
+        <option value="">Todas las zonas</option>
+      </select>
+    </div>
+
+    <p class="small muted rise rise-2" id="count" style="margin-bottom:14px"></p>
+    <div class="people rise rise-2" id="people"></div>
+  </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  MP.renderShell('directorio');
+
+  const selArea = document.getElementById('f-area');
+  Object.keys(MP.AREAS).forEach(a => selArea.insertAdjacentHTML('beforeend', '<option>' + a + '</option>'));
+  const selZona = document.getElementById('f-zona');
+  MP.ZONAS.forEach(z => selZona.insertAdjacentHTML('beforeend', '<option>' + z + '</option>'));
+
+  function render(){
+    const q = MP.norm(document.getElementById('q').value.trim());
+    const fa = selArea.value, fz = selZona.value;
+    const has = s => MP.norm(s).includes(q);
+
+    const res = MP.USERS.filter(u =>
+      (!fa || u.area === fa) && (!fz || u.zona === fz) &&
+      (!q || has(u.nombre) || has(u.cargo) || has(u.area) || has(u.zona) || u.habilidades.some(has))
+    );
+
+    document.getElementById('count').textContent =
+      res.length + ' colaborador' + (res.length === 1 ? '' : 'es') +
+      (q || fa || fz ? ' encontrados' : ' · Talento Humano mantiene el directorio al día');
+
+    document.getElementById('people').innerHTML = res.map(u => {
+      const a = MP.AREAS[u.area];
+      return '<article class="person" onclick="MP.openPerson(\'' + u.id + '\')">' +
+        MP.avatarHtml(u, 'avatar--lg') +
+        '<h3>' + u.nombre + '</h3>' +
+        '<div class="cargo">' + u.cargo + '</div>' +
+        '<div class="zona">📍 ' + u.zona + '</div>' +
+        '<div style="margin-top:8px"><span class="catbadge" style="background:' + a.color + ';color:' + a.txt + '">' + u.area + '</span></div>' +
+        '<div class="person__skills">' + u.habilidades.slice(0,3).map(h => '<span>' + h + '</span>').join('') +
+          (u.habilidades.length > 3 ? '<span>+' + (u.habilidades.length - 3) + '</span>' : '') + '</div>' +
+      '</article>';
+    }).join('') || '<div class="card" style="grid-column:1/-1;text-align:center;padding:50px"><div style="font-size:2.5rem">🔍</div><h3 style="margin-top:10px">Nadie coincide con esa búsqueda</h3><p class="muted small">Intenta con otra habilidad, cargo o nombre.</p></div>';
+  }
+  render();
+
+  /* Abrir perfil desde el buscador global (?p=id) o "Mi perfil" (?yo=1) */
+  const params = new URLSearchParams(location.search);
+  if(params.get('p')) MP.openPerson(params.get('p'));
+  if(params.get('yo')) MP.openPerson(MP.me().id);
+</script>
+</body>
+</html>

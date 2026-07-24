@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intranet Multiparque · Ingreso</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="login">
+  <!-- Panel de marca -->
+  <div class="login__left">
+    <span class="blob blob--float" style="width:220px;height:220px;background:rgba(186,215,49,.16);top:-60px;right:-40px"></span>
+    <span class="blob blob--float" style="width:150px;height:150px;background:rgba(0,174,239,.18);bottom:12%;right:8%;animation-delay:-4s"></span>
+    <span class="blob" style="width:90px;height:90px;background:rgba(255,233,5,.12);top:30%;left:-30px"></span>
+
+    <img class="logo" src="assets/logo.png" alt="Multiparque">
+    <h1>La intranet donde vive <em>todo</em> lo que pasa en el parque</h1>
+    <p class="lead">Noticias, compañeros, documentos y calendarios en un solo lugar. Desde tu computador o tu celular, estés en la oficina o recorriendo el parque.</p>
+    <img class="login__hero" src="assets/img/hero-login.jpg" alt="Panorámica del parque">
+    <div class="login__feats">
+      <span>📱 Funciona como app</span>
+      <span>🔐 Acceso seguro</span>
+      <span>👥 Usuarios ilimitados</span>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div class="login__right">
+    <span class="blob" style="width:180px;height:180px;background:rgba(186,215,49,.25);bottom:-50px;right:-50px"></span>
+    <span class="blob" style="width:110px;height:110px;background:rgba(0,174,239,.15);top:6%;right:12%"></span>
+
+    <div class="login__card">
+      <h2>¡Hola de nuevo! 👋</h2>
+      <p class="muted">Ingresa a la intranet de Multiparque.</p>
+
+      <div class="login__tabs">
+        <button id="tab-pass" class="is-active" onclick="switchTab('pass')">Usuario y contraseña</button>
+        <button id="tab-magic" onclick="switchTab('magic')">Magic link ✨</button>
+      </div>
+
+      <!-- Contraseña -->
+      <form id="form-pass" onsubmit="return doLogin(event)">
+        <div class="field">
+          <label>Correo corporativo</label>
+          <input id="inp-email" type="email" placeholder="tu.nombre@multiparque.co" required>
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" placeholder="••••••••" required>
+        </div>
+        <div class="captcha" id="captcha" onclick="this.classList.add('is-done')">
+          <span class="captcha__box"></span>
+          <span>No soy un robot 🤖</span>
+        </div>
+        <button class="btn btn--lime" style="width:100%" type="submit">Ingresar al parque</button>
+      </form>
+
+      <!-- Magic link -->
+      <form id="form-magic" class="hidden" onsubmit="return doMagic(event)">
+        <p class="small muted" style="margin-bottom:14px">Te enviamos un <strong>enlace de un solo uso</strong> a tu correo: entras con un clic, sin recordar claves.</p>
+        <div class="field">
+          <label>Correo corporativo</label>
+          <input id="inp-magic" type="email" placeholder="tu.nombre@multiparque.co" required>
+        </div>
+        <div id="magic-sent" class="magicmail hidden">
+          <div style="font-size:1.8rem">📬</div>
+          <p class="small"><strong>¡Enlace enviado!</strong><br>Revisa tu bandeja y toca el botón <em>«Entrar a la intranet»</em>.</p>
+          <button type="button" class="btn btn--cyan btn--sm" style="margin-top:10px" onclick="simulateMagic()">Simular clic en el correo →</button>
+        </div>
+        <button id="magic-btn" class="btn btn--lime" style="width:100%" type="submit">Enviarme el enlace mágico</button>
+      </form>
+
+      <!-- Selector de perfiles demo -->
+      <div class="demo-picker">
+        <p>Demo · explora la intranet como…</p>
+        <div class="demo-picker__grid" id="demo-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  /* Si ya hay sesión, directo al panel */
+  if(MP.getSession()) location.href = 'dashboard.html';
+
+  const grid = document.getElementById('demo-grid');
+  grid.innerHTML = MP.DEMO_PROFILES.map(p => {
+    const u = MP.user(p.id);
+    return '<button class="demo-chip" onclick="MP.login(\'' + p.id + '\')">' +
+      '<img src="' + u.foto + '" alt="">' + u.nombre.split(' ')[0] + ' · ' + p.etiqueta + '</button>';
+  }).join('');
+
+  function switchTab(t){
+    document.getElementById('tab-pass').classList.toggle('is-active', t === 'pass');
+    document.getElementById('tab-magic').classList.toggle('is-active', t === 'magic');
+    document.getElementById('form-pass').classList.toggle('hidden', t !== 'pass');
+    document.getElementById('form-magic').classList.toggle('hidden', t !== 'magic');
+  }
+
+  function matchUser(email){
+    const e = (email||'').toLowerCase().trim();
+    const byMail = MP.USERS.find(u => u.correo.toLowerCase() === e);
+    if(byMail) return byMail.id;
+    return 'felipe'; // usuario demo por defecto
+  }
+
+  function doLogin(ev){
+    ev.preventDefault();
+    if(!document.getElementById('captcha').classList.contains('is-done')){
+      MP.toast('Confirma que no eres un robot 🤖');
+      return false;
+    }
+    MP.login(matchUser(document.getElementById('inp-email').value));
+    return false;
+  }
+
+  let magicUser = 'felipe';
+  function doMagic(ev){
+    ev.preventDefault();
+    magicUser = matchUser(document.getElementById('inp-magic').value);
+    document.getElementById('magic-sent').classList.remove('hidden');
+    document.getElementById('magic-btn').classList.add('hidden');
+    return false;
+  }
+  function simulateMagic(){ MP.login(magicUser); }
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentos · Intranet Multiparque</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<main class="page">
+  <div class="container">
+    <div class="pagehead rise">
+      <div class="pagehead__title">
+        <img class="pagehead__icon" src="assets/img/icon-documentos.jpg" alt="">
+        <div>
+          <h1>Gestor documental</h1>
+          <svg class="smile" viewBox="0 0 88 14"><path d="M4 3c14 9 66 9 80 0"/></svg>
+        </div>
+      </div>
+      <p>La única fuente oficial de manuales, políticas y formatos del parque. Siempre la versión vigente, con historial trazable.</p>
+    </div>
+
+    <div class="toolbar rise rise-1">
+      <div class="searchbox">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.4-4.4"/></svg>
+        <input id="q" type="text" placeholder="Busca por título o por contenido: “puntos de encuentro”, “vacaciones”…" oninput="render()">
+      </div>
+    </div>
+
+    <div class="docs rise rise-2">
+      <aside class="folders" id="folders"></aside>
+      <div id="doclist"></div>
+    </div>
+  </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  MP.renderShell('documentos');
+  let carpeta = 'todas';
+
+  /* Hash de acceso directo (#talento, #marca) */
+  if(location.hash && MP.CARPETAS.some(c => c.id === location.hash.slice(1))) carpeta = location.hash.slice(1);
+
+  function renderFolders(){
+    const counts = {};
+    MP.DOCS.forEach(d => counts[d.carpeta] = (counts[d.carpeta] || 0) + 1);
+    document.getElementById('folders').innerHTML =
+      '<button class="folder' + (carpeta === 'todas' ? ' is-active' : '') + '" onclick="setCarpeta(\'todas\')">' +
+        MP.icon('doc',18) + ' Todos <span class="folder__count">' + MP.DOCS.length + '</span></button>' +
+      MP.CARPETAS.map(c =>
+        '<button class="folder' + (carpeta === c.id ? ' is-active' : '') + '" onclick="setCarpeta(\'' + c.id + '\')">' +
+          MP.icon(c.icono,18) + ' ' + c.nombre + ' <span class="folder__count">' + (counts[c.id] || 0) + '</span></button>'
+      ).join('');
+  }
+  function setCarpeta(c){ carpeta = c; renderFolders(); render(); }
+
+  function render(){
+    const q = MP.norm(document.getElementById('q').value.trim());
+    const has = s => MP.norm(s).includes(q);
+    const res = MP.DOCS.filter(d =>
+      (carpeta === 'todas' || d.carpeta === carpeta) &&
+      (!q || has(d.titulo) || has(d.contenido) || has(d.autor))
+    );
+
+    document.getElementById('doclist').innerHTML = res.map(d => {
+      const enContenido = q && !MP.norm(d.titulo).includes(q) && MP.norm(d.contenido).includes(q);
+      return '<div class="docrow" onclick="MP.openDoc(\'' + d.id + '\')">' +
+        '<span class="docicon docicon--' + d.tipo + '">' + d.tipo.toUpperCase() + '</span>' +
+        '<div class="docrow__main"><strong>' + d.titulo + '</strong>' +
+          '<div class="docrow__meta">' +
+            '<span>' + MP.fmtFecha(d.fecha) + '</span><span>' + d.autor + '</span>' +
+            '<span>' + d.tamano + '</span><span>↓ ' + d.descargas + ' descargas</span>' +
+            (enContenido ? '<span style="color:var(--cyan);font-weight:800">✓ coincide con el contenido</span>' : '') +
+          '</div></div>' +
+        '<div class="docrow__badges">' +
+          '<span class="vbadge">' + d.version + '</span>' +
+          '<span class="pbadge">' + MP.icon('eye',13) + ' ' + d.visibilidad + '</span>' +
+        '</div></div>';
+    }).join('') || '<div class="card" style="text-align:center;padding:50px"><div style="font-size:2.5rem">📂</div><h3 style="margin-top:10px">Sin documentos que coincidan</h3><p class="muted small">El buscador también revisa el contenido interno de cada documento.</p></div>';
+  }
+
+  renderFolders();
+  render();
+
+  /* Abrir documento desde el buscador global (?d=id) */
+  const params = new URLSearchParams(location.search);
+  if(params.get('d')) MP.openDoc(params.get('d'));
+</script>
+</body>
+</html>
