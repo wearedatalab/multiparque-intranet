@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Documentos · Intranet Multiparque</title>
 <link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#262161">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Multiparque">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="description" content="Intranet corporativa de Multiparque: noticias, directorio, documentos y calendarios del parque en un solo lugar.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -32,6 +40,8 @@
       </div>
     </div>
 
+    <p class="small muted rise rise-1" id="scope" style="margin-bottom:14px"></p>
+
     <div class="docs rise rise-2">
       <aside class="folders" id="folders"></aside>
       <div id="doclist"></div>
@@ -50,10 +60,10 @@
 
   function renderFolders(){
     const counts = {};
-    MP.DOCS.forEach(d => counts[d.carpeta] = (counts[d.carpeta] || 0) + 1);
+    MP.docsVisibles().forEach(d => counts[d.carpeta] = (counts[d.carpeta] || 0) + 1);
     document.getElementById('folders').innerHTML =
       '<button class="folder' + (carpeta === 'todas' ? ' is-active' : '') + '" onclick="setCarpeta(\'todas\')">' +
-        MP.icon('doc',18) + ' Todos <span class="folder__count">' + MP.DOCS.length + '</span></button>' +
+        MP.icon('doc',18) + ' Todos <span class="folder__count">' + MP.docsVisibles().length + '</span></button>' +
       MP.CARPETAS.map(c =>
         '<button class="folder' + (carpeta === c.id ? ' is-active' : '') + '" onclick="setCarpeta(\'' + c.id + '\')">' +
           MP.icon(c.icono,18) + ' ' + c.nombre + ' <span class="folder__count">' + (counts[c.id] || 0) + '</span></button>'
@@ -64,7 +74,7 @@
   function render(){
     const q = MP.norm(document.getElementById('q').value.trim());
     const has = s => MP.norm(s).includes(q);
-    const res = MP.DOCS.filter(d =>
+    const res = MP.docsVisibles().filter(d =>
       (carpeta === 'todas' || d.carpeta === carpeta) &&
       (!q || has(d.titulo) || has(d.contenido) || has(d.autor))
     );
@@ -77,7 +87,7 @@
           '<div class="docrow__meta">' +
             '<span>' + MP.fmtFecha(d.fecha) + '</span><span>' + d.autor + '</span>' +
             '<span>' + d.tamano + '</span><span>↓ ' + d.descargas + ' descargas</span>' +
-            (enContenido ? '<span style="color:var(--cyan);font-weight:800">✓ coincide con el contenido</span>' : '') +
+            (enContenido ? '<span style="color:var(--cyan-text);font-weight:800">✓ coincide con el contenido</span>' : '') +
           '</div></div>' +
         '<div class="docrow__badges">' +
           '<span class="vbadge">' + d.version + '</span>' +
@@ -86,6 +96,19 @@
     }).join('') || '<div class="card" style="text-align:center;padding:50px"><div style="font-size:2.5rem">📂</div><h3 style="margin-top:10px">Sin documentos que coincidan</h3><p class="muted small">El buscador también revisa el contenido interno de cada documento.</p></div>';
   }
 
+  /* Deja explícito el control de permisos: cada rol ve solo lo que le corresponde. */
+  function renderScope(){
+    const me = MP.me();
+    const visibles = MP.docsVisibles().length, total = MP.DOCS.length;
+    const ocultos = total - visibles;
+    document.getElementById('scope').textContent = ocultos
+      ? 'Ves ' + visibles + ' de ' + total + ' documentos: ' + ocultos +
+        (ocultos === 1 ? ' está restringido' : ' están restringidos') +
+        ' para el rol ' + MP.ROL_NOMBRE[me.rol] + '.'
+      : 'Como ' + MP.ROL_NOMBRE[me.rol] + ' tienes acceso a los ' + total + ' documentos del parque.';
+  }
+
+  renderScope();
   renderFolders();
   render();
 

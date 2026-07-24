@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calendario · Intranet Multiparque</title>
 <link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#262161">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Multiparque">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="description" content="Intranet corporativa de Multiparque: noticias, directorio, documentos y calendarios del parque en un solo lugar.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -104,13 +112,21 @@
       const iso = anio + '-' + String(mes + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       const hoy = iso === '2026-07-23';
       const delDia = evs.filter(e => e.fecha === iso);
-      html += '<td class="' + (hoy ? 'is-today' : '') + '"><span class="d">' + d + '</span>' +
+      const clases = [hoy ? 'is-today' : '', delDia.length ? 'has-ev' : ''].filter(Boolean).join(' ');
+      html += '<td class="' + clases + '"' +
+          (delDia.length ? ' onclick="abrirDia(\'' + iso + '\')"' : '') + '>' +
+        '<span class="d">' + d + '</span>' +
         delDia.map(e => {
           const a = e.area ? MP.AREAS[e.area] : null;
           const bg = a ? a.color : 'var(--navy)';
           const tx = a ? a.txt : '#fff';
-          return '<button class="calev" style="background:' + bg + ';color:' + tx + '" onclick="MP.openEvent(\'' + e.id + '\')" title="' + MP.esc(e.titulo) + '">' + MP.esc(e.titulo) + '</button>';
-        }).join('') + '</td>';
+          return '<button class="calev" style="background:' + bg + ';color:' + tx + '" onclick="event.stopPropagation();MP.openEvent(\'' + e.id + '\')" title="' + MP.esc(e.titulo) + '">' + MP.esc(e.titulo) + '</button>';
+        }).join('') +
+        (delDia.length ? '<span class="calday__dots">' + delDia.map(e => {
+          const a = e.area ? MP.AREAS[e.area] : null;
+          return '<i style="background:' + (a ? a.color : 'var(--navy)') + '"></i>';
+        }).join('') + '</span>' : '') +
+        '</td>';
       celda++;
       if(celda % 7 === 0) html += '</tr><tr>';
     }
@@ -123,6 +139,27 @@
     const areasMes = [...new Set(evs.filter(e => e.area && e.fecha.startsWith(anio + '-' + String(mes+1).padStart(2,'0'))).map(e => e.area))];
     document.getElementById('legend-areas').innerHTML = areasMes.map(a =>
       '<span style="margin-right:12px"><i style="background:' + MP.AREAS[a].color + '"></i> ' + a + '</span>').join('');
+  }
+
+  /* En móvil el día completo es tocable: si tiene un solo evento se abre directo,
+     si tiene varios se listan para elegir. */
+  function abrirDia(iso){
+    const delDia = visibles().filter(e => e.fecha === iso);
+    if(!delDia.length) return;
+    if(delDia.length === 1){ MP.openEvent(delDia[0].id); return; }
+    MP.openModal(
+      '<h2 style="font-size:1.3rem">' + MP.fmtDia(iso).replace(/^./, c => c.toUpperCase()) + ', ' + MP.fmtFecha(iso) + '</h2>' +
+      '<p class="muted small" style="margin-bottom:16px">' + delDia.length + ' eventos programados</p>' +
+      delDia.map(e => {
+        const a = e.area ? MP.AREAS[e.area] : null;
+        return '<button class="eventrow" style="width:100%;text-align:left;cursor:pointer" onclick="MP.closeModal();MP.openEvent(\'' + e.id + '\')">' +
+          '<div class="datebox" style="background:' + (a ? a.color : 'var(--navy)') + ';border:none">' +
+            '<b style="color:#fff;font-size:.95rem">' + e.hora.split(' ')[0] + '</b>' +
+            '<span style="color:rgba(255,255,255,.8)">' + (e.hora.includes('a.') ? 'AM' : (e.hora.includes('p.') ? 'PM' : '')) + '</span></div>' +
+          '<div class="eventrow__info"><strong>' + MP.esc(e.titulo) + '</strong>' +
+          '<span class="small muted">' + MP.esc(e.lugar) + '</span></div></button>';
+      }).join('')
+    );
   }
 
   function mover(d){

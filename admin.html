@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Administración · Intranet Multiparque</title>
 <link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#262161">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Multiparque">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="description" content="Intranet corporativa de Multiparque: noticias, directorio, documentos y calendarios del parque en un solo lugar.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -78,7 +86,7 @@
 
     <!-- ==================== PERSONALIZACIÓN ==================== -->
     <section id="p-marca" class="hidden rise">
-      <div class="dash" style="grid-template-columns:1fr 1fr">
+      <div class="dash dash--even">
         <div class="card">
           <div class="widget__head"><h3>Color de acento</h3><span class="badge badge--soft">Sin desarrolladores</span></div>
           <p class="small muted" style="margin-bottom:16px">Cambia el color de los botones y acentos de toda la intranet. Pruébalo: el cambio es inmediato.</p>
@@ -142,24 +150,45 @@
     '</tr>';
   }).join('');
 
-  /* ---------- Gauges de infraestructura ---------- */
+  /* ---------- Gauges de infraestructura ----------
+     El panel se vende como consulta "en tiempo real": las lecturas se refrescan
+     cada 4 s con una fluctuación pequeña, como haría el monitoreo real de AWS. */
   const RES = [
-    { nombre:'Procesador', uso: 22, det:'0.11 de 0.5 vCPU', color:'var(--cyan)' },
-    { nombre:'Memoria RAM', uso: 41, det:'0.82 de 2 GB', color:'var(--lime-dark)' },
-    { nombre:'Almacenamiento', uso: 28, det:'8.4 de 30 GB', color:'var(--orange)' }
+    { nombre:'Procesador',     uso:22, cap:0.5, unidad:'vCPU', dec:2, color:'var(--cyan)' },
+    { nombre:'Memoria RAM',    uso:41, cap:2,   unidad:'GB',   dec:2, color:'var(--lime-dark)' },
+    { nombre:'Almacenamiento', uso:28, cap:30,  unidad:'GB',   dec:1, color:'var(--orange)', fijo:true }
   ];
   const C = 2 * Math.PI * 58;
-  document.getElementById('gauges').innerHTML = RES.map(r =>
-    '<div class="card gauge">' +
-      '<div class="gauge__ring" style="color:' + r.color + '">' +
-        '<svg width="130" height="130" viewBox="0 0 130 130">' +
-          '<circle class="bgc" cx="65" cy="65" r="58"/>' +
-          '<circle cx="65" cy="65" r="58" stroke="currentColor" stroke-dasharray="' + C + '" stroke-dashoffset="' + (C * (1 - r.uso/100)) + '"/>' +
-        '</svg>' +
-        '<span class="gauge__val">' + r.uso + '%</span>' +
-      '</div>' +
-      '<h4>' + r.nombre + '</h4><p>' + r.det + '</p>' +
-    '</div>').join('');
+
+  function pintarGauges(){
+    document.getElementById('gauges').innerHTML = RES.map(r => {
+      const usado = (r.cap * r.uso / 100).toFixed(r.dec);
+      return '<div class="card gauge">' +
+        '<div class="gauge__ring" style="color:' + r.color + '">' +
+          '<svg width="130" height="130" viewBox="0 0 130 130">' +
+            '<circle class="bgc" cx="65" cy="65" r="58"/>' +
+            '<circle cx="65" cy="65" r="58" stroke="currentColor" stroke-dasharray="' + C + '" ' +
+              'stroke-dashoffset="' + (C * (1 - r.uso/100)) + '" style="transition:stroke-dashoffset 1.2s ease"/>' +
+          '</svg>' +
+          '<span class="gauge__val">' + Math.round(r.uso) + '%</span>' +
+        '</div>' +
+        '<h4>' + r.nombre + '</h4>' +
+        '<p>' + usado + ' de ' + r.cap + ' ' + r.unidad + '</p>' +
+      '</div>';
+    }).join('') +
+    '<p class="small muted" style="grid-column:1/-1;text-align:center;margin-top:4px">' +
+      '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--lime-dark);margin-right:6px"></span>' +
+      'Lectura en vivo · se actualiza cada pocos segundos</p>';
+  }
+  pintarGauges();
+
+  setInterval(() => {
+    RES.forEach(r => {
+      if(r.fijo) return; // el almacenamiento no baja solo
+      r.uso = Math.min(72, Math.max(12, r.uso + (Math.random() * 7 - 3.5)));
+    });
+    if(!document.getElementById('p-infra').classList.contains('hidden')) pintarGauges();
+  }, 4000);
 
   /* ---------- Swatches ---------- */
   const colores = ['#BAD731','#00AEEF','#FFE905','#F46200','#AB214F','#740F75'];

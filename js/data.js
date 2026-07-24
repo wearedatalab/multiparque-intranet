@@ -6,7 +6,9 @@ window.MP = window.MP || {};
 
 /* ---------- Áreas y colores ---------- */
 MP.AREAS = {
-  'Dirección':                { color: '#262161', txt: '#fff' },
+  /* Índigo, no el navy #262161: en el calendario los eventos corporativos ya usan
+     el navy y los de Dirección quedaban indistinguibles. */
+  'Dirección':                { color: '#4A3F9E', txt: '#fff' },
   'Talento Humano':           { color: '#AB214F', txt: '#fff' },
   'Comunicaciones':           { color: '#740F75', txt: '#fff' },
   'Operaciones':              { color: '#00AEEF', txt: '#fff' },
@@ -283,7 +285,7 @@ MP.QUICK_LINKS = {
   talento: [
     { icono:'users',  titulo:'Directorio de empleados', sub:'Actualizar perfiles', href:'directorio.html' },
     { icono:'doc',    titulo:'Documentos de TH', sub:'Formatos y manuales', href:'documentos.html#talento' },
-    { icono:'cake',   titulo:'Cumpleaños del mes', sub:'4 en julio', href:'directorio.html' },
+    { icono:'cake',   titulo:'Cumpleaños del mes', sub:'5 en julio', href:'directorio.html' },
     { icono:'megaphone', titulo:'Publicar noticia de TH', sub:'Editor de noticias', href:'noticias.html#nueva' }
   ],
   comunicaciones: [

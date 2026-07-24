@@ -124,6 +124,37 @@
     t._h = setTimeout(() => t.classList.remove('is-on'), 2800);
   };
 
+  /* ---------- Permisos del gestor documental ----------
+     La visibilidad de cada documento se aplica de verdad: filtra el listado, el
+     dashboard y el buscador global, para que «Ingresar como» muestre a cada rol
+     exactamente lo que le corresponde. */
+  MP.puedeVer = function(doc, user){
+    user = user || MP.me();
+    if(!user) return false;
+    if(['direccion','admin'].includes(user.rol)) return true;   // ven todo
+    const v = doc.visibilidad;
+    if(v === 'Todo el parque') return true;
+    if(v === 'Jefes de área') return ['jefe','talento','comunicaciones'].includes(user.rol);
+    if(v.startsWith('Área: ')) return user.area === v.slice(6);
+    return false;
+  };
+  MP.docsVisibles = function(user){
+    return MP.DOCS.filter(d => MP.puedeVer(d, user));
+  };
+
+  /* ---------- Copiar al portapapeles ---------- */
+  MP.copiar = function(texto){
+    const fin = () => MP.toast('Copiado: ' + texto);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(texto).then(fin).catch(fin);
+    } else {
+      const t = document.createElement('textarea');
+      t.value = texto; document.body.appendChild(t); t.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(t); fin();
+    }
+  };
+
   /* ---------- Modal genérico ---------- */
   MP.openModal = function(html, imgSrc){
     let m = document.getElementById('mp-modal');
@@ -232,7 +263,9 @@
       '<div class="searchlay__panel">' +
         '<div class="searchlay__input">' + MP.icon('search',22) +
           '<input id="gsearch" type="text" placeholder="Personas, documentos, noticias, eventos…" autocomplete="off">' +
-          '<kbd>ESC</kbd></div>' +
+          '<kbd>ESC</kbd>' +
+          '<button class="searchlay__close" onclick="MP.closeSearch()" aria-label="Cerrar búsqueda">' + MP.icon('x',20) + '</button>' +
+        '</div>' +
         '<div class="searchlay__chips"><div class="chips" id="gsearch-chips">' +
           ['Todo','Personas','Documentos','Noticias','Eventos'].map((c,i) =>
             '<button class="chip'+(i===0?' is-active':'')+'" data-t="'+c+'">'+c+'</button>').join('') +
@@ -312,7 +345,7 @@
       }
     }
     if(tipo === 'Todo' || tipo === 'Documentos'){
-      const r = MP.DOCS.filter(d => has(d.titulo) || has(d.contenido) || has(d.autor));
+      const r = MP.docsVisibles().filter(d => has(d.titulo) || has(d.contenido) || has(d.autor));
       if(r.length){
         html += '<div class="sr-group">Documentos · ' + r.length + '</div>' + r.slice(0,5).map(d =>
           '<button class="sr-item" onclick="location.href=\'documentos.html?d=' + d.id + '\'">' +
@@ -374,8 +407,8 @@
       '<div class="chips">' + u.habilidades.map(h =>
         '<span class="chip is-active" style="cursor:default">' + MP.esc(h) + '</span>').join('') + '</div>' +
       '<div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap">' +
-        '<button class="btn btn--navy btn--sm" onclick="MP.toast(\'Correo copiado al portapapeles\')">' + MP.icon('mail',15) + ' Escribir correo</button>' +
-        '<button class="btn btn--ghost btn--sm" onclick="MP.toast(\'Contacto guardado\')">' + MP.icon('download',15) + ' Guardar contacto</button>' +
+        '<a class="btn btn--navy btn--sm" href="mailto:' + u.correo + '">' + MP.icon('mail',15) + ' Escribir correo</a>' +
+        '<button class="btn btn--ghost btn--sm" onclick="MP.copiar(\'' + u.correo + '\')">' + MP.icon('doc',15) + ' Copiar correo</button>' +
       '</div>'
     );
   };
@@ -384,6 +417,10 @@
   MP.openDoc = function(id){
     const d = MP.DOCS.find(x => x.id === id);
     if(!d) return;
+    if(!MP.puedeVer(d)){
+      MP.toast('Este documento está restringido para tu rol');
+      return;
+    }
     const carpeta = MP.CARPETAS.find(c => c.id === d.carpeta);
     const hist = [{ v:d.version, fecha:d.fecha, autor:d.autor, actual:true }].concat(d.historial);
     MP.openModal(

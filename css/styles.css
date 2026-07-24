@@ -12,6 +12,9 @@
   --lime:#BAD731;
   --lime-dark:#9DBC1E;
   --cyan:#00AEEF;
+  /* Variante accesible del cian para texto pequeño sobre blanco (el #00AEEF de
+     marca queda en ~2.5:1 y se reserva para fondos, íconos y bordes). */
+  --cyan-text:#0077A3;
   --blue:#1B8DFE;
   --yellow:#FFE905;
   --orange:#F46200;
@@ -306,16 +309,17 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; line-height:1.15;
 .pinned p{ font-size:.88rem; color:#6d6320; margin-top:2px; }
 
 .dash{ display:grid; grid-template-columns:1.7fr 1fr; gap:22px; align-items:start; }
+.dash--even{ grid-template-columns:1fr 1fr; }
 .dash__col{ display:flex; flex-direction:column; gap:22px; }
 .widget h3{ font-size:1.12rem; display:flex; align-items:center; gap:10px; }
 .widget h3 .dot{ width:10px; height:10px; border-radius:50%; background:var(--lime); }
 .widget__head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-.widget__head a{ font-size:.82rem; font-weight:800; color:var(--cyan); }
+.widget__head a{ font-size:.82rem; font-weight:800; color:var(--cyan-text); }
 .widget__head a:hover{ text-decoration:underline; }
 
 .newsrow{ display:flex; gap:14px; padding:12px 0; border-top:1px solid var(--line); cursor:pointer; }
 .newsrow:first-of-type{ border-top:none; padding-top:0; }
-.newsrow:hover strong{ color:var(--cyan); }
+.newsrow:hover strong{ color:var(--cyan-text); }
 .newsrow img{ width:86px; height:64px; object-fit:cover; border-radius:12px; flex-shrink:0; }
 .newsrow__noimg{
   width:86px; height:64px; border-radius:12px; flex-shrink:0;
@@ -336,7 +340,7 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; line-height:1.15;
 
 .doclink{ display:flex; align-items:center; gap:12px; padding:9px 0; border-top:1px solid var(--line); cursor:pointer; }
 .doclink:first-of-type{ border-top:none; padding-top:0; }
-.doclink:hover strong{ color:var(--cyan); }
+.doclink:hover strong{ color:var(--cyan-text); }
 .doclink strong{ font-size:.88rem; transition:.15s; }
 
 .quicklinks{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -349,7 +353,7 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; line-height:1.15;
 .quicklink span{ font-size:.76rem; color:var(--muted); }
 .quicklink .qicon{
   width:38px; height:38px; border-radius:12px; display:grid; place-items:center;
-  background:rgba(0,174,239,.12); color:var(--cyan);
+  background:rgba(0,174,239,.12); color:var(--cyan-text);
 }
 
 .bdayrow{ display:flex; align-items:center; gap:12px; padding:8px 0; border-top:1px solid var(--line); }
@@ -387,7 +391,7 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; line-height:1.15;
 .person .avatar--lg{ margin:14px auto 10px; border:4px solid #fff; position:relative; box-shadow:0 6px 16px -6px rgba(27,23,71,.4); }
 .person h3{ font-size:1.05rem; }
 .person .cargo{ font-size:.85rem; color:var(--muted); margin-top:2px; }
-.person .zona{ font-size:.75rem; font-weight:700; color:var(--cyan); margin-top:4px; }
+.person .zona{ font-size:.75rem; font-weight:700; color:var(--cyan-text); margin-top:4px; }
 .person__skills{ display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:12px; }
 .person__skills span{
   font-size:.68rem; font-weight:700; background:var(--bg); color:var(--muted);
@@ -523,6 +527,8 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; line-height:1.15;
 .callegend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:16px; font-size:.75rem; font-weight:700; color:var(--muted); }
 .callegend span{ display:flex; align-items:center; gap:6px; }
 .callegend i{ width:11px; height:11px; border-radius:4px; display:inline-block; }
+/* Los puntos solo existen en móvil; en escritorio manda el título del evento. */
+.calday__dots{ display:none; }
 
 /* ============================================================
    ADMIN
@@ -586,6 +592,9 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; line-height:1.15;
   font-size:.68rem; background:var(--bg); border:1px solid var(--line);
   padding:3px 8px; border-radius:7px; color:var(--muted);
 }
+/* En escritorio basta ESC; en táctil hace falta un botón real de cierre. */
+.searchlay__close{ display:none; color:var(--muted); padding:4px; border-radius:10px; }
+.searchlay__close:hover{ background:var(--bg); color:var(--navy); }
 .searchlay__chips{ padding:14px 24px 4px; }
 .searchlay__results{ overflow-y:auto; padding:10px 12px 18px; }
 .sr-group{ font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); padding:14px 14px 6px; }
@@ -648,8 +657,15 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; line-height:1.15;
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+/* Entre 880 y 1080px el sexto enlace («Administración») aprieta la barra:
+   compactamos la navegación antes de que se desborde. */
+@media (max-width: 1080px){
+  .topbar__nav a{ font-size:.85rem; padding:8px 10px; }
+  .topbar__logo img{ height:44px; }
+  .topbar__inner{ gap:12px; }
+}
 @media (max-width: 1020px){
-  .dash{ grid-template-columns:1fr; }
+  .dash, .dash--even{ grid-template-columns:1fr; }
   .docs{ grid-template-columns:1fr; }
   .folders{ position:static; flex-direction:row; overflow-x:auto; padding-bottom:6px; }
   .folder{ white-space:nowrap; }
@@ -671,8 +687,17 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; line-height:1.15;
   .gauges{ grid-template-columns:1fr; }
   .quicklinks{ grid-template-columns:1fr 1fr; }
   .calgrid{ padding:14px; }
-  .calgrid td{ height:64px; padding:3px; }
-  .calev{ font-size:0; padding:0; height:6px; border-radius:99px; margin-top:3px; }
+  .calgrid td{ height:62px; padding:3px; cursor:pointer; }
+  /* En móvil no cabe el título: los eventos se vuelven puntos de color y el día
+     completo se toca para ver el detalle (ver .calday__dots y MP.openDay). */
+  .calev{ display:none; }
+  .calday__dots{ display:flex; gap:3px; flex-wrap:wrap; justify-content:center; margin-top:5px; }
+  .calday__dots i{ width:7px; height:7px; border-radius:50%; display:block; }
+  .calgrid td.has-ev{ background:rgba(0,174,239,.05); }
   .modal__body{ padding:24px 22px 26px; }
   .pagehead__icon{ width:58px; height:58px; }
+  .searchlay{ padding:0; }
+  .searchlay__panel{ max-height:100vh; height:100%; border-radius:0; }
+  .searchlay__input kbd{ display:none; }
+  .searchlay__close{ display:block; }
 }

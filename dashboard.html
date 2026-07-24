@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inicio · Intranet Multiparque</title>
 <link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#262161">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Multiparque">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="description" content="Intranet corporativa de Multiparque: noticias, directorio, documentos y calendarios del parque en un solo lugar.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -89,8 +97,8 @@
   const me = MP.me();
 
   /* ---------- Saludo ---------- */
-  const hora = 10; // demo: media mañana
-  const saludo = hora < 12 ? '¡Buenos días' : (hora < 18 ? '¡Buenas tardes' : '¡Buenas noches');
+  const hora = new Date().getHours(); // saluda según la hora real de quien ve la demo
+  const saludo = hora < 12 ? '¡Buenos días' : (hora < 19 ? '¡Buenas tardes' : '¡Buenas noches');
   const rolDesc = {
     direccion: 'Este es el pulso del parque hoy: comunicados, equipo y operación en un solo vistazo.',
     talento: 'Tu gente te espera: cumpleaños, nuevos ingresos y los documentos de Talento Humano al día.',
@@ -102,7 +110,7 @@
   document.getElementById('hello').innerHTML =
     '<span class="blob blob--float" style="width:190px;height:190px;background:rgba(186,215,49,.14);top:-50px;right:-30px"></span>' +
     '<span class="blob" style="width:120px;height:120px;background:rgba(0,174,239,.16);bottom:-40px;right:16%"></span>' +
-    '<h1>' + saludo + ', ' + me.nombre.split(' ')[0] + '! 👋</h1>' +
+    '<h1>' + saludo + ', ' + me.nombre.split(' ')[0] + '! 👋</h1>' +
     '<p>' + rolDesc[me.rol] + '</p>' +
     '<div class="hello__meta">' +
       '<span>Hoy es <b>jueves, 23 de julio de 2026</b></span>' +
@@ -140,8 +148,10 @@
       '<strong>' + q.titulo + '</strong><span>' + q.sub + '</span></a>').join('');
 
   /* ---------- Documentos frecuentes (según área) ---------- */
-  let docs = MP.DOCS.filter(d => d.frecuente);
-  if(me.area === 'Operaciones') docs = [MP.DOCS.find(d => d.id === 'd05')].concat(docs.filter(d => d.id !== 'd05'));
+  const visibles = MP.docsVisibles();
+  let docs = visibles.filter(d => d.frecuente);
+  const manualKarts = visibles.find(d => d.id === 'd05');
+  if(me.area === 'Operaciones' && manualKarts) docs = [manualKarts].concat(docs.filter(d => d.id !== 'd05'));
   document.getElementById('w-docs').innerHTML = docs.slice(0,4).map(d =>
     '<div class="doclink" onclick="MP.openDoc(\'' + d.id + '\')">' +
       '<span class="docicon docicon--' + d.tipo + '" style="width:36px;height:36px;font-size:.55rem">' + d.tipo.toUpperCase() + '</span>' +

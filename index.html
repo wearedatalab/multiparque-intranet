@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Intranet Multiparque · Ingreso</title>
 <link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#262161">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Multiparque">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="description" content="Intranet corporativa de Multiparque: noticias, directorio, documentos y calendarios del parque en un solo lugar.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -68,6 +76,10 @@
           <label>Correo corporativo</label>
           <input id="inp-magic" type="email" placeholder="tu.nombre@multiparque.co" required>
         </div>
+        <div class="captcha" id="captcha-magic" onclick="this.classList.add('is-done')">
+          <span class="captcha__box"></span>
+          <span>No soy un robot 🤖</span>
+        </div>
         <div id="magic-sent" class="magicmail hidden">
           <div style="font-size:1.8rem">📬</div>
           <p class="small"><strong>¡Enlace enviado!</strong><br>Revisa tu bandeja y toca el botón <em>«Entrar a la intranet»</em>.</p>
@@ -105,11 +117,20 @@
     document.getElementById('form-magic').classList.toggle('hidden', t !== 'magic');
   }
 
+  /* En la demo no hay backend: si el correo no está en la base de 16 colaboradores,
+     se avisa y se entra con un perfil de ejemplo en lugar de suplantar en silencio. */
   function matchUser(email){
     const e = (email||'').toLowerCase().trim();
     const byMail = MP.USERS.find(u => u.correo.toLowerCase() === e);
-    if(byMail) return byMail.id;
-    return 'felipe'; // usuario demo por defecto
+    if(byMail) return { id: byMail.id, exacto: true };
+    return { id: 'felipe', exacto: false };
+  }
+
+  function entrar(m){
+    if(m.exacto){ MP.login(m.id); return; }
+    const u = MP.user(m.id);
+    MP.toast('Demo: ese correo no está en la base de ejemplo, entras como ' + u.nombre);
+    setTimeout(() => MP.login(m.id), 1600);
   }
 
   function doLogin(ev){
@@ -118,19 +139,23 @@
       MP.toast('Confirma que no eres un robot 🤖');
       return false;
     }
-    MP.login(matchUser(document.getElementById('inp-email').value));
+    entrar(matchUser(document.getElementById('inp-email').value));
     return false;
   }
 
-  let magicUser = 'felipe';
+  let magicUser = { id:'felipe', exacto:false };
   function doMagic(ev){
     ev.preventDefault();
+    if(!document.getElementById('captcha-magic').classList.contains('is-done')){
+      MP.toast('Confirma que no eres un robot 🤖');
+      return false;
+    }
     magicUser = matchUser(document.getElementById('inp-magic').value);
     document.getElementById('magic-sent').classList.remove('hidden');
     document.getElementById('magic-btn').classList.add('hidden');
     return false;
   }
-  function simulateMagic(){ MP.login(magicUser); }
+  function simulateMagic(){ entrar(magicUser); }
 </script>
 </body>
 </html>
